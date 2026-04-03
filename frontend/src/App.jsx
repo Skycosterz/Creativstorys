@@ -3,7 +3,7 @@ import './App.css';
 import { useAvatarGeneration } from './hooks/useAvatarGeneration';
 
 // frontend/src/App.jsx
-import { API_BASE_URL as APIBASE } from './config';
+import { API_BASE_URL as API_BASE } from './config';
 
 
 const STATUS_LABELS = {
