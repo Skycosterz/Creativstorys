@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { useAvatarGeneration } from './hooks/useAvatarGeneration';
 
-import { API_BASE_URL as API_BASE } from './config';
+// frontend/src/App.jsx
+import { API_BASE_URL as APIBASE } from './config';
 
 
 const STATUS_LABELS = {
