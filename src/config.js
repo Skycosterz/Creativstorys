@@ -82,7 +82,8 @@ function validateConfig() {
   if (config.isProduction) {
     if (!process.env.ALLOWED_ORIGINS) {
       throw new Error(
-        '[config] SECURITY ALERT: ALLOWED_ORIGINS must be set in production mode to prevent cross-origin attacks.'
+        '[config] ❌ SECURITY ALERT: ALLOWED_ORIGINS must be set in production mode.\n' +
+        'Example: ALLOWED_ORIGINS=https://your-frontend.vercel.app,https://another-domain.com'
       );
     }
 

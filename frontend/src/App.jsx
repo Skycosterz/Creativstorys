@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { useAvatarGeneration } from './hooks/useAvatarGeneration';
 
-// frontend/src/App.jsx
-import { API_BASE_URL as API_BASE } from './config';
+import { API_BASE_URL as API_BASE, resolveAssetUrl } from './config';
 
 
 const STATUS_LABELS = {
@@ -504,7 +503,7 @@ function App() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al generar el cómic');
-      setComicPreviewUrl(`${API_BASE}${data.imageUrl}`);
+      setComicPreviewUrl(resolveAssetUrl(data.imageUrl));
     } catch (err) {
       setComicError(err.message);
     } finally {
@@ -635,7 +634,7 @@ function App() {
             <div className="series-header">
               <div className="series-cover-large">
                 {seriesData.coverImageUrl ? (
-                  <img src={seriesData.coverImageUrl} alt={seriesData.title} />
+                  <img src={resolveAssetUrl(seriesData.coverImageUrl)} alt={seriesData.title} />
                 ) : (
                   <div className="series-cover-placeholder">P</div>
                 )}
@@ -692,7 +691,7 @@ function App() {
               {readerData.scenes.map((scene, idx) => (
                 <div key={idx} className="reader-scene">
                   {scene.imageUrl && (
-                    <img src={scene.imageUrl} alt="Scene" className="reader-image" />
+                    <img src={resolveAssetUrl(scene.imageUrl)} alt="Scene" className="reader-image" />
                   )}
                   <p className="reader-text">{scene.text}</p>
                 </div>
