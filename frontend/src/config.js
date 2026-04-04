@@ -10,8 +10,8 @@
  *   await fetch(`${API_BASE_URL}/stories`);
  */
 
-export const API_BASE_URL =
-  import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
+// CORREGIDO: Base vacía en prod, /api se antepone en apiUrl()
+export const API_BASE_URL = import.meta
 
 export function resolveApiUrl(path = '') {
   const base = API_BASE_URL.replace(/\/$/, '');
