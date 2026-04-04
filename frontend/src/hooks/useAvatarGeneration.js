@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-import { API_BASE_URL as API_BASE } from '../config';
+import { apiUrl } from '../config';
 
 
 /**
@@ -78,7 +78,7 @@ export function useAvatarGeneration({ onSuccess } = {}) {
       const shortDescription = parts.length > 0 ? parts.join(', ') : character.name;
 
       try {
-        const response = await fetch(`${API_BASE}/api/avatars/generate`, {
+        const response = await fetch(apiUrl('/avatars/generate'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
