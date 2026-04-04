@@ -138,8 +138,8 @@ function App() {
       setLoading((prev) => ({ ...prev, bootstrap: true }));
       try {
         const [charactersRes, storiesRes] = await Promise.all([
-          fetch(`${API_BASE}/characters`),
-          fetch(`${API_BASE}/stories`),
+          fetch(`${API_BASE}/api/characters`),
+          fetch(`${API_BASE}/api/stories`),
         ]);
 
         const charactersData = await charactersRes.json();
@@ -208,7 +208,7 @@ function App() {
 
       setLoading((prev) => ({ ...prev, loadStory: true }));
       try {
-        const res = await fetch(`${API_BASE}/stories/${selectedStoryId}`);
+        const res = await fetch(`${API_BASE}/api/stories/${selectedStoryId}`);
         const data = await res.json();
 
         setStoryLog(Array.isArray(data.log) ? data.log : []);
@@ -252,7 +252,7 @@ function App() {
     if (hasPendingImages && selectedStoryId) {
       intervalId = setInterval(async () => {
         try {
-          const res = await fetch(`${API_BASE}/stories/${selectedStoryId}`);
+          const res = await fetch(`${API_BASE}/api/stories/${selectedStoryId}`);
           if (res.ok) {
             const data = await res.json();
             setStoryLog(Array.isArray(data.log) ? data.log : []);
@@ -279,7 +279,7 @@ function App() {
     setUpgradeNeeded(null); // Reset any previous error
 
     try {
-      const res = await fetch(`${API_BASE}/characters`, {
+      const res = await fetch(`${API_BASE}/api/characters`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -326,7 +326,7 @@ function App() {
 
     setLoading((prev) => ({ ...prev, createStory: true }));
     try {
-      const res = await fetch(`${API_BASE}/stories/start`, {
+      const res = await fetch(`${API_BASE}/api/stories/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -391,7 +391,7 @@ function App() {
 
     setLoading((prev) => ({ ...prev, updateStory: true }));
     try {
-      const res = await fetch(`${API_BASE}/stories/${editingStory.id}`, {
+      const res = await fetch(`${API_BASE}/api/stories/${editingStory.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -427,7 +427,7 @@ function App() {
     setLoading((prev) => ({ ...prev, updateStory: true }));
     try {
       // Assuming existing status field can be used or adding a dummy update for now
-      const res = await fetch(`${API_BASE}/stories/${storyId}`, {
+      const res = await fetch(`${API_BASE}/api/stories/${storyId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: nextStatus }),
@@ -459,7 +459,7 @@ function App() {
 
     setLoading((prev) => ({ ...prev, continueStory: true }));
     try {
-      const res = await fetch(`${API_BASE}/stories/${selectedStoryId}/continue`, {
+      const res = await fetch(`${API_BASE}/api/stories/${selectedStoryId}/continue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input }),

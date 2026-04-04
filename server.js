@@ -51,6 +51,7 @@ try {
 }
 
 const app = express();
+const apiRouter = express.Router();
 const PORT = config.port;
 
 // ── Rate Limiters ──────────────────────────────────────────────
@@ -82,6 +83,7 @@ app.use(cors({
 app.use(globalLimiter);
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/api', apiRouter);
 
 
 function parseId(value) {
@@ -501,12 +503,12 @@ USO DEL INPUT DEL JUGADOR (CRÍTICO)
 }
 
 // Health check (for Railway / Render / Fly.io)
-app.get('/health', (_req, res) => {
+apiRouter.get('/health', (_req, res) => {
   res.json({ ok: true, env: config.nodeEnv });
 });
 
 // Legacy root health check — kept for backward compat
-app.get('/', (req, res) => {
+apiRouter.get('/status', (req, res) => {
   res.json({ ok: true, message: 'Story/roleplay engine MVP online' });
 });
 
@@ -515,7 +517,7 @@ app.get('/', (req, res) => {
  * Crea un personaje
  * body: { name, description?, persona?, goals?, limits? }
  */
-app.post('/characters', async (req, res) => {
+apiRouter.post('/characters', async (req, res) => {
   const { name, description, persona, goals, limits } = req.body;
 
   if (!name) {
@@ -558,7 +560,7 @@ app.post('/characters', async (req, res) => {
  * GET /characters
  * Lista personajes (MVP)
  */
-app.get('/characters', async (req, res) => {
+apiRouter.get('/characters', async (req, res) => {
   const characters = await prisma.character.findMany({ orderBy: { id: 'desc' } });
   res.json(characters.map(toCharacterResponse));
 });
@@ -568,7 +570,7 @@ app.get('/characters', async (req, res) => {
  * Crea una nueva historia
  * body: { title, genre, scenario, characterIds: [] }
  */
-app.post('/stories/start', aiGenerationLimiter, async (req, res) => {
+apiRouter.post('/stories/start', aiGenerationLimiter, async (req, res) => {
 
   const { title, genre, scenario, characterIds } = req.body;
 
@@ -676,7 +678,7 @@ app.post('/stories/start', aiGenerationLimiter, async (req, res) => {
  * Continúa una historia existente con input del jugador
  * body: { input }  (lo que el jugador hace/dice en role-play)
  */
-app.post('/stories/:id/continue', aiGenerationLimiter, async (req, res) => {
+apiRouter.post('/stories/:id/continue', aiGenerationLimiter, async (req, res) => {
 
   const storyId = parseId(req.params.id);
   const { input } = req.body;
@@ -793,7 +795,7 @@ Genera la siguiente escena de la historia, avanzando la trama.`,
  * GET /stories
  * Lista historias guardadas
  */
-app.get('/stories', async (req, res) => {
+apiRouter.get('/stories', async (req, res) => {
   const stories = await prisma.story.findMany({
     orderBy: { lastActivityAt: 'desc' },
     select: {
@@ -826,7 +828,7 @@ app.get('/stories', async (req, res) => {
  * PATCH /stories/:id
  * Actualiza campos básicos de una historia
  */
-app.patch('/stories/:id', async (req, res) => {
+apiRouter.patch('/stories/:id', async (req, res) => {
   const storyId = parseId(req.params.id);
 
   if (storyId === null) {
@@ -883,7 +885,7 @@ app.patch('/stories/:id', async (req, res) => {
  * GET /stories/:id
  * Devuelve el estado completo de una historia
  */
-app.get('/stories/:id', async (req, res) => {
+apiRouter.get('/stories/:id', async (req, res) => {
   const storyId = parseId(req.params.id);
 
   if (storyId === null) {
@@ -917,7 +919,7 @@ app.get('/stories/:id', async (req, res) => {
  * GET /characters/:id
  * Devuelve un personaje por ID (incluye avatarUrl)
  */
-app.get('/characters/:id', async (req, res) => {
+apiRouter.get('/characters/:id', async (req, res) => {
   const characterId = parseId(req.params.id);
   if (characterId === null) {
     return res.status(400).json({ error: 'ID de personaje inválido' });
@@ -992,7 +994,7 @@ Output JSON ONLY with the following schema:
  * Response JSON:
  *   { imageUrl: string, characterId: string }
  */
-app.post('/api/avatars/generate', aiGenerationLimiter, async (req, res) => {
+apiRouter.post('/avatars/generate', aiGenerationLimiter, async (req, res) => {
   const { characterId, characterName, shortDescription } = req.body || {};
 
   // --- Input validation ---
@@ -1074,7 +1076,7 @@ app.post('/api/avatars/generate', aiGenerationLimiter, async (req, res) => {
  * GET /api/home/stories
  * Fetch all published stories for the Home feed.
  */
-app.get('/api/home/stories', async (req, res) => {
+apiRouter.get('/home/stories', async (req, res) => {
   try {
     const stories = await prisma.story.findMany({
       where: { publishStatus: 'published' },
@@ -1112,7 +1114,7 @@ app.get('/api/home/stories', async (req, res) => {
  * GET /api/series/:id
  * Fetch a published story and its published episodes.
  */
-app.get('/api/series/:id', async (req, res) => {
+apiRouter.get('/series/:id', async (req, res) => {
   const storyId = parseId(req.params.id);
   if (storyId === null) return res.status(404).json({ error: 'Story not found' });
 
@@ -1153,7 +1155,7 @@ app.get('/api/series/:id', async (req, res) => {
  * GET /api/episodes/:id
  * Fetch an episode and its scenes for the reader.
  */
-app.get('/api/episodes/:id', async (req, res) => {
+apiRouter.get('/episodes/:id', async (req, res) => {
   const episodeId = parseId(req.params.id);
   if (episodeId === null) return res.status(404).json({ error: 'Episode not found' });
 
@@ -1186,7 +1188,7 @@ app.get('/api/episodes/:id', async (req, res) => {
  * POST /api/stories/:id/episodes
  * Group unassigned scenes of a story into a new Episode.
  */
-app.post('/api/stories/:id/episodes', async (req, res) => {
+apiRouter.post('/stories/:id/episodes', async (req, res) => {
   const storyId = parseId(req.params.id);
   if (storyId === null) return res.status(404).json({ error: 'Story not found' });
 
@@ -1246,7 +1248,7 @@ app.post('/api/stories/:id/episodes', async (req, res) => {
  * PATCH /api/stories/:id/publish
  * Toggle publishStatus and coverImageUrl of a story.
  */
-app.patch('/api/stories/:id/publish', async (req, res) => {
+apiRouter.patch('/stories/:id/publish', async (req, res) => {
   const storyId = parseId(req.params.id);
   if (storyId === null) return res.status(404).json({ error: 'Story not found' });
 
@@ -1284,7 +1286,7 @@ app.patch('/api/stories/:id/publish', async (req, res) => {
  * PATCH /api/episodes/:id/publish
  * Toggle publishStatus of an episode.
  */
-app.patch('/api/episodes/:id/publish', async (req, res) => {
+apiRouter.patch('/episodes/:id/publish', async (req, res) => {
   const episodeId = parseId(req.params.id);
   if (episodeId === null) return res.status(404).json({ error: 'Episode not found' });
 
@@ -1326,7 +1328,7 @@ app.patch('/api/episodes/:id/publish', async (req, res) => {
  * POST /api/stories/:id/comic-strip
  * Exports scenes into a single comic strip PNG format.
  */
-app.post('/api/stories/:id/comic-strip', aiGenerationLimiter, async (req, res) => {
+apiRouter.post('/stories/:id/comic-strip', aiGenerationLimiter, async (req, res) => {
 
   const storyId = parseId(req.params.id);
   if (storyId === null) return res.status(404).json({ error: 'Story not found' });
@@ -1348,7 +1350,12 @@ app.post('/api/stories/:id/comic-strip', aiGenerationLimiter, async (req, res) =
   }
 });
 
-// Arrancar servidor
-app.listen(PORT, () => {
-  console.log(`Story engine MVP escuchando en http://localhost:${PORT}`);
-});
+// Exportar para Vercel
+module.exports = app;
+
+// Arrancar servidor localmente
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Story engine MVP escuchando en http://localhost:${PORT}`);
+  });
+}
