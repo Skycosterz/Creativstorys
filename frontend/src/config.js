@@ -11,23 +11,33 @@
  */
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL?.trim() || 
-  (import.meta.env.PROD ? '' : 'http://localhost:3000');
+  import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
 
-/**
- * Resolves an asset URL based on whether it's an absolute URL (like from S3)
- * or a relative path (like from local development).
- *
- * @param {string} url The URL or path to resolve.
- * @returns {string} The full, usable URL.
- */
+export function resolveApiUrl(path = '') {
+  const base = API_BASE_URL.replace(/\/$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${cleanPath}`;
+}
+
 export function resolveAssetUrl(url) {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  // Ensure the URL is prefixed with API_BASE_URL for local relative paths
-  const base = API_BASE_URL.replace(/\/$/, '');
-  const path = url.startsWith('/') ? url : `/${url}`;
-  return `${base}${path}`;
+  return url.startsWith('/') ? url : `/${url}`;
+}
+
+export async function fetchJson(path, options = {}) {
+  const response = await fetch(resolveApiUrl(path), options);
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${text}`);
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Respuesta no JSON para ${path}: ${text}`);
+  }
 }
