@@ -344,7 +344,7 @@ async function updateMemoryAndArcInBackground(storyId, latestSceneText) {
 
     // Use ensureWorldStateShape to provide defaults if missing
     const ws = ensureWorldStateShape(story.worldState, { characterIds: [] });
-    
+
     const prompt = `Analiza la ultima escena de la historia.
 Escena: "${latestSceneText}"
 
@@ -367,26 +367,26 @@ Responde ÚNICAMENTE en JSON válido con esta estructura:
 }`;
 
     const jsonStr = await callLLM({
-       systemPrompt: 'Responde puramente en formato JSON estricto sin bloques Markdown.',
-       worldState: {},
-       messages: [{ role: 'user', content: prompt }]
+      systemPrompt: 'Responde puramente en formato JSON estricto sin bloques Markdown.',
+      worldState: {},
+      messages: [{ role: 'user', content: prompt }]
     });
 
     const cleanJson = jsonStr.replace(/```json/gi, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleanJson);
 
     if (parsed.arc) {
-       ws.arc = { ...ws.arc, ...parsed.arc };
+      ws.arc = { ...ws.arc, ...parsed.arc };
     }
-    
+
     if (Array.isArray(parsed.newMemories) && parsed.newMemories.length > 0) {
-       ws.memories = ws.memories || { global: [] };
-       ws.memories.global = [...(ws.memories.global || []), ...parsed.newMemories].slice(-15);
+      ws.memories = ws.memories || { global: [] };
+      ws.memories.global = [...(ws.memories.global || []), ...parsed.newMemories].slice(-15);
     }
 
     await prisma.story.update({
-       where: { id: parseInt(storyId) },
-       data: { worldState: ws }
+      where: { id: parseInt(storyId) },
+      data: { worldState: ws }
     });
     console.log(`[Memory Engine] Story ${storyId} Arc/Memory updated. Progress: ${ws.arc.progress}%`);
   } catch (error) {
@@ -960,24 +960,24 @@ Output JSON ONLY with the following schema:
   "styleProfile": "e.g., premium anime illustration, clean cel shading, highly detailed anime art",
   "negativePrompt": "e.g., photorealistic, 3d render, realistic skin, photography, live action, bad anatomy"
 }`;
-  
+
   try {
     const responseText = await callLLM({
-       systemPrompt: 'Respond only with pure JSON. Do not use Markdown blocks.',
-       worldState: {},
-       messages: [{ role: 'user', content: prompt }]
+      systemPrompt: 'Respond only with pure JSON. Do not use Markdown blocks.',
+      worldState: {},
+      messages: [{ role: 'user', content: prompt }]
     });
-    
+
     const cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
     return JSON.parse(cleanJson);
-  } catch(e) {
-     console.error('[expandCharacterIdentity] Failed to parse identity JSON:', e.message);
-     return {
-       canonicalDescription: shortDescription,
-       visualTraits: { description: shortDescription },
-       styleProfile: 'premium anime illustration, cel shading, highly detailed',
-       negativePrompt: 'photorealistic, 3d render, realism, live action, deformed face, blurry'
-     };
+  } catch (e) {
+    console.error('[expandCharacterIdentity] Failed to parse identity JSON:', e.message);
+    return {
+      canonicalDescription: shortDescription,
+      visualTraits: { description: shortDescription },
+      styleProfile: 'premium anime illustration, cel shading, highly detailed',
+      negativePrompt: 'photorealistic, 3d render, realism, live action, deformed face, blurry'
+    };
   }
 }
 
@@ -1049,7 +1049,7 @@ apiRouter.post('/avatars/generate', aiGenerationLimiter, async (req, res) => {
   // --- Persist URL and Identity to DB ---
   const updated = await prisma.character.update({
     where: { id: numericId },
-    data: { 
+    data: {
       avatarUrl: imageUrl,
       referenceImageUrl: imageUrl, // Stored explicitly as a reusable reference image
       canonicalDescription: identity.canonicalDescription,
@@ -1300,7 +1300,7 @@ apiRouter.patch('/episodes/:id/publish', async (req, res) => {
     }
   }
   if (typeof title === 'string' && title.trim()) {
-      data.title = title.trim();
+    data.title = title.trim();
   }
 
   if (Object.keys(data).length === 0) {
@@ -1342,7 +1342,7 @@ apiRouter.post('/stories/:id/comic-strip', aiGenerationLimiter, async (req, res)
       maxPanels: maxPanels || 4,
       layout: layout || 'horizontal'
     });
-    
+
     res.json(result);
   } catch (err) {
     console.error('[/api/stories/:id/comic-strip] Error:', err.message);
