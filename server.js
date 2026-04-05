@@ -41,13 +41,16 @@ const { exportComicStrip } = require('./src/services/comicStripExporter');
 const rateLimit = require('express-rate-limit');
 
 
-// Validate required env vars early — fails fast in production
+// Validate required env vars early — fails fast but safely
 try {
   validateConfig();
-  ensureDefaultUser(); // [NEW] Seed default guest user
+  // Fire and forget initialization to not block cold start
+  ensureDefaultUser().catch(err => {
+    console.error('[Setup] Error creating default user:', err.message);
+  });
 } catch (err) {
-  console.error(err.message);
-  process.exit(1);
+  console.error('[Config] Configuration error:', err.message);
+  // In production serverless, we don't process.exit(1) as it kills the instance
 }
 
 const app = express();
@@ -83,7 +86,23 @@ app.use(cors({
 app.use(globalLimiter);
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// Mounting at both /api and root for robust Vercel routing
 app.use('/api', apiRouter);
+app.use('/', apiRouter);
+
+// Help debug requests in production
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api') && !res.headersSent) {
+    console.warn(`[404] API Route not found: ${req.method} ${req.path}`);
+    return res.status(404).json({
+      error: 'Not Found',
+      message: `The API endpoint ${req.path} does not exist.`,
+      path: req.path
+    });
+  }
+  next();
+});
 
 
 function parseId(value) {

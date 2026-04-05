@@ -13,6 +13,8 @@
       }
     }
   ],
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -20,7 +22,13 @@
     },
     {
       "source": "/(.*)",
+      "destination": "/frontend/index.html",
+      "check": true
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
 }
+
